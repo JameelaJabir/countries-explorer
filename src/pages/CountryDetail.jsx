@@ -13,7 +13,7 @@ const CountryDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
-  const { addToHistory } = useHistory();
+  const { addToHistory, isInitialized } = useHistory();
 
   useEffect(() => {
     const fetchCountryDetails = async () => {
@@ -22,12 +22,15 @@ const CountryDetail = () => {
         const data = await getCountryByCode(id);
 
         if (data && data.length > 0) {
-          setCountry(data[0]);
-          addToHistory(data[0]); // Add to recent searches history
+          const fetchedCountry = data[0];
+          setCountry(fetchedCountry);
 
-          // Fetch border countries if available
-          if (data[0].borders && data[0].borders.length > 0) {
-            const borderData = await getCountryBorders(data[0].borders);
+          if (isInitialized) {
+            addToHistory(fetchedCountry); // ✅ safe only after load
+          }
+
+          if (fetchedCountry.borders?.length > 0) {
+            const borderData = await getCountryBorders(fetchedCountry.borders);
             setBorderCountries(borderData);
           }
         } else {
@@ -43,7 +46,7 @@ const CountryDetail = () => {
     };
 
     fetchCountryDetails();
-  }, [id]);
+  }, [id, addToHistory, isInitialized]);
 
   if (loading) {
     return <Loader />;
